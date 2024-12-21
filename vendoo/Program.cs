@@ -44,6 +44,12 @@ builder.Services
         };
     });
 var app = builder.Build();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Upload", "Files")),
+    RequestPath = "/Upload/Files"
+});
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
