@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Oracle.ManagedDataAccess.Client;
+using System.Security.Cryptography.X509Certificates;
 using vendoo.Models;
 using vendoo.Packages;
 using static System.Net.Mime.MediaTypeNames;
@@ -296,7 +298,7 @@ namespace vendoo.Controllers
                 }
                 else
                 {
-                    return NotFound("No categories found matching the criteria.");
+                    return Ok(new { message = "No categories found matching the criteria." });
                 }
             }
             catch (Exception ex)
@@ -327,12 +329,12 @@ namespace vendoo.Controllers
             }
         }
 
-        [HttpGet("GetLocations/")]
-        public IActionResult GetLocation([FromQuery] int?Id = null)
+        [HttpGet("GetLocations/{maincat_id}")]
+        public IActionResult GetLocation(int maincat_id,[FromQuery] int?Id = null)
         {
             try
             {
-                var cat = _basepack.getLocations(Id);
+                var cat = _basepack.getLocations(Id,maincat_id);
                 if (cat != null)
                 {
                     return Ok(cat);
@@ -367,5 +369,68 @@ namespace vendoo.Controllers
                 return StatusCode(500, $"Error getting categories: {ex.Message}");
             }
         }
+
+        [HttpGet("GetOrders/")]
+        public IActionResult GetOrders()
+        {
+            try
+            {
+                var cat = _basepack.GetOrder();
+                if (cat != null)
+                {
+                    return Ok(cat);
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error getting categories: {ex.Message}");
+            }
+        }
+        [HttpPost("AddToCart")]
+        public async Task<IActionResult> AddToCart([FromBody] CartModel model)
+        {
+            try
+            {
+                var newCompany = await _basepack.AddToBasket(model);
+
+                if (newCompany)
+                {
+                    return Ok(new { message = "product aded successfully" });
+                }
+                else
+                {
+                    return StatusCode(500, "Failed to add product");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error creating category: {ex.Message}");
+            }
+        }
+        [HttpGet("GetBasket/{id}")]
+        public IActionResult GetBasket(int id)
+        {
+            try
+            {
+                var cat = _basepack.GetBasket(id);
+                if (cat != null)
+                {
+                    return Ok(cat);
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error getting categories: {ex.Message}");
+            }
+        }
+
     }
 }

@@ -11,5 +11,6 @@
         public string Image { get; set; }
         public int location_id { get; set; }
         public int Guest_id { get; set; }
+        public int Id { get; set; }
     }
 }

@@ -9,5 +9,9 @@
         public int Price { get; set; }
         public int Contact { get; set; }
         public List<string>? Image_path { get; set; }
+        public int Vaucher { get; set; }
+        public int Sale {  get; set; }
+        public int Current_price { get; set; }
+        public string Title { get; set; }
     }
 }
