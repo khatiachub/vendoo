@@ -9,5 +9,7 @@
         public string Description { get; set; }
         public int Price { get; set; }
         public IFormFile Image {  get; set; }
+        public string Location { get; set; }
+        public string Guests { get; set; }
     }
 }

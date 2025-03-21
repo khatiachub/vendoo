@@ -60,11 +60,10 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 }
 
-
+app.UseCors("MyPolicy");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("MyPolicy");
 app.MapControllers();
 
 app.Run();

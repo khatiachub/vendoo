@@ -12,5 +12,6 @@
         public int Id { get; set; }
         public int Current_price { get; set; }
         public int Starting_price { get; set; }
+        public int Product_id { get; set; }
     }
 }

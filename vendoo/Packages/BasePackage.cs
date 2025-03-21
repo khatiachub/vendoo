@@ -40,11 +40,114 @@ namespace vendoo.Packages
 
                         command.Parameters.Add("p_name", OracleDbType.Varchar2).Value = model.Name;
                         command.Parameters.Add("p_lastname", OracleDbType.Varchar2).Value = model.LastName;
+                        command.Parameters.Add("p_email", OracleDbType.Varchar2).Value = model.Email;
                         command.Parameters.Add("p_password", OracleDbType.Varchar2).Value = hashedPassword;
+                        command.Parameters.Add("p_mobile", OracleDbType.Int32).Value = model.Mobile;
                         command.Parameters.Add("p_role_id", OracleDbType.Int32).Value = model.Role_id;
 
                         command.ExecuteNonQuery();
                         Console.WriteLine("Stored procedure executed successfully.");
+                        return true;
+                    }
+                }
+                catch (OracleException ex)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    throw;
+                }
+            }
+        }
+        public bool UpdateUser(UserModel model,int id)
+        {
+            using (OracleConnection connection = GetConnection())
+            {
+                try
+                {
+                    connection.Open();
+                    using (OracleCommand command = new OracleCommand("pkg_categories_operations.proc_update_user", connection))
+                    {
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                        command.Parameters.Add("p_user_id", OracleDbType.Int32).Value =id;
+                        command.Parameters.Add("p_name", OracleDbType.Varchar2).Value = model.Name;
+                        command.Parameters.Add("p_lastname", OracleDbType.Varchar2).Value = model.LastName;
+                        command.Parameters.Add("p_email", OracleDbType.Varchar2).Value = model.Email;
+                        command.Parameters.Add("p_mobile", OracleDbType.Int32).Value = model.Mobile;
+
+                        command.ExecuteNonQuery();
+                        Console.WriteLine("Stored procedure executed successfully.");
+                        return true;
+                    }
+                }
+                catch (OracleException ex)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    throw;
+                }
+            }
+        }
+        public UserModel GetUser(int id)
+        {
+            UserModel user = null;
+            using (OracleConnection connection = GetConnection())
+            {
+                try
+                {
+                    connection.Open();
+                    using (OracleCommand command = new OracleCommand("pkg_categories_operations.proc_get_user", connection))
+                    {
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                        command.Parameters.Add("p_user_id", OracleDbType.Int32).Value = id;
+                        OracleParameter cursorParameter = new OracleParameter
+                        {
+                            OracleDbType = OracleDbType.RefCursor,
+                            Direction = ParameterDirection.Output
+                        };                     
+                        command.Parameters.Add(cursorParameter);
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {                             
+                                user = new UserModel
+                                {
+                                    Id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : 0,
+                                    Name = reader["name"] != DBNull.Value ? reader["name"].ToString() : string.Empty,
+                                    LastName = reader["lastname"] != DBNull.Value ? reader["lastname"].ToString() : string.Empty,
+                                    Email = reader["email"] != DBNull.Value ? reader["email"].ToString() : string.Empty,
+                                    Mobile = reader["mobile"] != DBNull.Value ? Convert.ToInt32(reader["mobile"]) : 0,
+                                    Role_id = reader["role_id"] != DBNull.Value ? Convert.ToInt32(reader["role_id"]) : 0,
+                                };
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error fetching user: {ex.Message}");
+                }
+            }
+            return user;
+        }
+        public bool DeleteUser(int id)
+        {
+            using (OracleConnection connection = GetConnection())
+            {
+                try
+                {
+                    connection.Open();
+                    using (OracleCommand command = new OracleCommand("pkg_categories_operations.proc_delete_user", connection))
+                    {
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                        command.Parameters.Add("p_user_id", OracleDbType.Int32).Value = id;
+                        command.ExecuteNonQuery();
                         return true;
                     }
                 }
@@ -191,59 +294,37 @@ namespace vendoo.Packages
                 }
             }
         }
-        public async Task<bool> AddCategories2ndChild(ChildCategoryModel model, string imagepath)
+        public async Task<bool> AddItemDescription(ItemDescriptionModel model, List<string> imagepath,int id)
         {
             using (var connection = GetConnection())
             {
                 try
                 {
                     await connection.OpenAsync();
-                    using (var command = new OracleCommand("pkg_categories_operations.proc_add_2nd_child", connection))
-                    {
-                        command.CommandType = CommandType.StoredProcedure;
-
-                        command.Parameters.Add("p_sec_child_name", OracleDbType.Varchar2).Value = model.sec_child_name;
-                        command.Parameters.Add("p_category_id", OracleDbType.Int32).Value = model.Category_id;
-                        command.Parameters.Add("p_description", OracleDbType.Varchar2).Value = model.Description;
-                        command.Parameters.Add("p_price", OracleDbType.Int32).Value = model.Price;
-                        command.Parameters.Add("p_image", OracleDbType.Varchar2).Value = imagepath;
-
-                        command.ExecuteNonQuery();
-
-                        return true;
-                    }
-                }
-                catch (OracleException ex)
-                {
-                    Console.WriteLine($"Oracle error: {ex.Message}");
-                    return false;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"General error: {ex.Message}");
-                    return false;
-                }
-            }
-        }
-        public async Task<bool> AddItemDescription(ItemDescriptionModel model, List<string> imagepath)
-        {
-            using (var connection = GetConnection())
-            {
-                try
-                {
-                    await connection.OpenAsync();
-                    using (var command = new OracleCommand("pkg_categories_operations.proc_add_3st_child", connection))
+                    using (var command = new OracleCommand("pkg_categories_operations.proc_add_product", connection))
                     {
                         command.CommandType = CommandType.StoredProcedure;
 
                         command.Parameters.Add("p_product_name", OracleDbType.Varchar2).Value = model.Product_name;
-                        command.Parameters.Add("p_category_id", OracleDbType.Int32).Value = model.Category_id;
-                        command.Parameters.Add("p_full_description", OracleDbType.Varchar2).Value = model.Full_Description;
+                        command.Parameters.Add("p_category_id", OracleDbType.Int32).Value =id;
                         command.Parameters.Add("p_price", OracleDbType.Int32).Value = model.Price;
                         command.Parameters.Add("p_contact", OracleDbType.Int32).Value = model.Contact;
                         string imagePathsJson = JsonConvert.SerializeObject(imagepath);
                         command.Parameters.Add("p_json", OracleDbType.Clob).Value = imagePathsJson;
-
+                        command.Parameters.Add("p_vaucher", OracleDbType.Int32).Value = model.Vaucher;
+                        command.Parameters.Add("p_sale", OracleDbType.Int32).Value = model.Sale;
+                        command.Parameters.Add("p_title", OracleDbType.Varchar2).Value = model.Title;
+                        command.Parameters.Add("p_location", OracleDbType.Varchar2).Value = model.Location;
+                        command.Parameters.Add("p_guests", OracleDbType.Varchar2).Value = model.Guests;
+                        command.Parameters.Add("p_description", OracleDbType.Varchar2).Value =model.Description;
+                        command.Parameters.Add("p_offerin", OracleDbType.Varchar2).Value = model.Offerin;
+                        command.Parameters.Add("p_pricein", OracleDbType.Varchar2).Value = model.Pricein;
+                        command.Parameters.Add("p_menu", OracleDbType.Varchar2).Value = model.Menu;
+                        command.Parameters.Add("p_womenzone", OracleDbType.Varchar2).Value =model.Womenzone;
+                        command.Parameters.Add("p_menzone", OracleDbType.Varchar2).Value = model.Menzone;
+                        command.Parameters.Add("p_clinicconcept", OracleDbType.Varchar2).Value = model.Clinicconcept;
+                        command.Parameters.Add("p_addinfo", OracleDbType.Varchar2).Value =model.Addinfo;
+                        command.Parameters.Add("p_athotel", OracleDbType.Varchar2).Value = model.AtHotel;
 
                         await command.ExecuteNonQueryAsync();
                         return true;
@@ -300,58 +381,7 @@ namespace vendoo.Packages
             }
             return categories;
         }
-
-        public List<GetCategoryModel> GetFilteredItems(int id, string category_name, string? child_name, int? locationId, int? guestId, int? priceMin, int? priceMax)
-        {
-            List<GetCategoryModel> categories = new List<GetCategoryModel>();
-
-            using (var connection = GetConnection())
-            {
-                connection.Open();
-                using (var command = new OracleCommand("pkg_categories_operations.proc_get_filtered_categories", connection))
-                {
-                    command.CommandType = CommandType.StoredProcedure;
-
-                    OracleParameter cursorParameter = new OracleParameter
-                    {
-                        OracleDbType = OracleDbType.RefCursor,
-                        Direction = ParameterDirection.Output
-                    };
-
-                    command.Parameters.Add("p_category_id", OracleDbType.Int32).Value = id;
-                    command.Parameters.Add("p_category_name", OracleDbType.Varchar2).Value = category_name;
-                    command.Parameters.Add("p_child_category_name", OracleDbType.Varchar2).Value = child_name;
-                    command.Parameters.Add("p_location_id", OracleDbType.Int32).Value = locationId;
-                    command.Parameters.Add("p_guest_id", OracleDbType.Int32).Value = guestId;
-                    command.Parameters.Add("p_price_min", OracleDbType.Int32).Value = priceMin;
-                    command.Parameters.Add("p_price_max", OracleDbType.Int32).Value = priceMax;
-
-                    command.Parameters.Add(cursorParameter);
-
-
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            var category = new GetCategoryModel
-                            {
-                                category_name = reader["category_name"] != DBNull.Value ? reader["category_name"].ToString() : string.Empty,
-                                first_child_name = reader["first_child_name"] != DBNull.Value ? reader["first_child_name"].ToString() : string.Empty,
-                                sec_child_name = reader["sec_child_name"] != DBNull.Value ? reader["sec_child_name"].ToString() : string.Empty,
-                                Description = reader["description"] != DBNull.Value ? reader["description"].ToString() : string.Empty,
-                                Price = reader["price"] != DBNull.Value ? Convert.ToInt32(reader["price"]) : 0,
-                                Image = reader["image"] != DBNull.Value ? reader["image"].ToString() : string.Empty,
-                                location_id = reader["location_id"] != DBNull.Value ? Convert.ToInt32(reader["location_id"]) : 0,
-                                Guest_id = reader["guest_id"] != DBNull.Value ? Convert.ToInt32(reader["guest_id"]) : 0,
-                                Id= reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : 0
-                            };
-                            categories.Add(category);
-                        }
-                    }
-                }
-            }
-            return categories;
-        }
+           
         public List<CategoriesModel> GetCategories()
         {
             List<CategoriesModel> categories = new List<CategoriesModel>();
@@ -387,14 +417,14 @@ namespace vendoo.Packages
             }
             return categories;
         }
-        public List<GetCategoryModel> GetCategories2ndChild(int id, string category_name)
+        public List<GetCategoryModel> GetFilteredItems(int id, string category_name)
         {
             List<GetCategoryModel> categories = new List<GetCategoryModel>();
 
             using (var connection = GetConnection())
             {
                 connection.Open();
-                using (var command = new OracleCommand("pkg_categories_operations.proc_get_child_categories", connection))
+                using (var command = new OracleCommand("pkg_categories_operations.proc_get_filtered_categories", connection))
                 {
                     command.CommandType = CommandType.StoredProcedure;
 
@@ -417,11 +447,17 @@ namespace vendoo.Packages
                             {
                                 category_name = reader["category_name"] != DBNull.Value ? reader["category_name"].ToString() : string.Empty,
                                 first_child_name = reader["first_child_name"] != DBNull.Value ? reader["first_child_name"].ToString() : string.Empty,
-                                sec_child_name = reader["sec_child_name"] != DBNull.Value ? reader["sec_child_name"].ToString() : string.Empty,
-                                Description = reader["description"] != DBNull.Value ? reader["description"].ToString() : string.Empty,
+                                title = reader["title"] != DBNull.Value ? reader["title"].ToString() : string.Empty,
+                                Category_id = reader["category_id"] != DBNull.Value ? Convert.ToInt32(reader["category_id"]) : 0,
+                                Main_category_id = reader["main_category_id"] != DBNull.Value ? Convert.ToInt32(reader["main_category_id"]) : 0,
+                                product_name = reader["product_name"] != DBNull.Value ? reader["product_name"].ToString() : string.Empty,
                                 Price = reader["price"] != DBNull.Value ? Convert.ToInt32(reader["price"]) : 0,
-                                Image = reader["image"] != DBNull.Value ? reader["image"].ToString() : string.Empty,
-                                Id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : 0
+                                Image_path = reader["image_path"] != DBNull.Value ? JsonConvert.DeserializeObject<List<string>>(reader["image_path"].ToString()) : new List<string>(),
+                                location = reader["location"] != DBNull.Value ? reader["location"].ToString() : string.Empty,
+                                Guests = reader["guests"] != DBNull.Value ? reader["guests"].ToString() : string.Empty,   
+                                Id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : 0,
+                                Sale = reader["sale"] != DBNull.Value ? Convert.ToInt32(reader["sale"]) : 0,
+                                Current_price = reader["current_price"] != DBNull.Value ? Convert.ToInt32(reader["current_price"]) : 0
                             };
                             categories.Add(category);
                         }
@@ -431,6 +467,101 @@ namespace vendoo.Packages
             return categories;
         }
 
+        public List<GetCategoryModel> GetSearchedPRoducts(string product_name)
+        {
+            List<GetCategoryModel> categories = new List<GetCategoryModel>();
+
+            using (var connection = GetConnection())
+            {
+                connection.Open();
+                using (var command = new OracleCommand("pkg_categories_operations.proc_get_searched_products", connection))
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+
+                    OracleParameter cursorParameter = new OracleParameter
+                    {
+                        OracleDbType = OracleDbType.RefCursor,
+                        Direction = ParameterDirection.Output
+                    };
+                    command.Parameters.Add("p_product_name", OracleDbType.Varchar2).Value = product_name;
+
+                    command.Parameters.Add(cursorParameter);
+
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var category = new GetCategoryModel
+                            {
+                                category_name = reader["category_name"] != DBNull.Value ? reader["category_name"].ToString() : string.Empty,
+                                first_child_name = reader["first_child_name"] != DBNull.Value ? reader["first_child_name"].ToString() : string.Empty,
+                                title = reader["title"] != DBNull.Value ? reader["title"].ToString() : string.Empty,
+                                Category_id = reader["category_id"] != DBNull.Value ? Convert.ToInt32(reader["category_id"]) : 0,
+                                Main_category_id = reader["main_category_id"] != DBNull.Value ? Convert.ToInt32(reader["main_category_id"]) : 0,
+                                product_name = reader["product_name"] != DBNull.Value ? reader["product_name"].ToString() : string.Empty,
+                                Price = reader["price"] != DBNull.Value ? Convert.ToInt32(reader["price"]) : 0,
+                                Image_path = reader["image_path"] != DBNull.Value ? JsonConvert.DeserializeObject<List<string>>(reader["image_path"].ToString()) : new List<string>(),
+                                location = reader["location"] != DBNull.Value ? reader["location"].ToString() : string.Empty,
+                                Guests = reader["guests"] != DBNull.Value ? reader["guests"].ToString() : string.Empty,
+                                Id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : 0,
+                                Sale = reader["sale"] != DBNull.Value ? Convert.ToInt32(reader["sale"]) : 0,
+                                Current_price = reader["current_price"] != DBNull.Value ? Convert.ToInt32(reader["current_price"]) : 0
+                            };
+                            categories.Add(category);
+                        }
+                    }
+                }
+            }
+            return categories;
+        }
+
+        public List<GetCategoryModel> GetProducts()
+        {
+            List<GetCategoryModel> categories = new List<GetCategoryModel>();
+
+            using (var connection = GetConnection())
+            {
+                connection.Open();
+                using (var command = new OracleCommand("pkg_categories_operations.proc_get_products", connection))
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+
+                    OracleParameter cursorParameter = new OracleParameter
+                    {
+                        OracleDbType = OracleDbType.RefCursor,
+                        Direction = ParameterDirection.Output
+                    };
+                    
+
+                    command.Parameters.Add(cursorParameter);
+
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var category = new GetCategoryModel
+                            {
+                                category_name = reader["category_name"] != DBNull.Value ? reader["category_name"].ToString() : string.Empty,
+                                first_child_name = reader["first_child_name"] != DBNull.Value ? reader["first_child_name"].ToString() : string.Empty,
+                                title = reader["title"] != DBNull.Value ? reader["title"].ToString() : string.Empty,
+                                product_name = reader["product_name"] != DBNull.Value ? reader["product_name"].ToString() : string.Empty,
+                                Price = reader["price"] != DBNull.Value ? Convert.ToInt32(reader["price"]) : 0,
+                                Image_path = reader["image_path"] != DBNull.Value ? JsonConvert.DeserializeObject<List<string>>(reader["image_path"].ToString()) : new List<string>(),
+                                location = reader["location"] != DBNull.Value ? reader["location"].ToString() : string.Empty,
+                                Guests = reader["guests"] != DBNull.Value ? reader["guests"].ToString() : string.Empty,
+                                Id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : 0,
+                                Sale = reader["sale"] != DBNull.Value ? Convert.ToInt32(reader["sale"]) : 0,
+                                Current_price = reader["current_price"] != DBNull.Value ? Convert.ToInt32(reader["current_price"]) : 0
+                            };
+                            categories.Add(category);
+                        }
+                    }
+                }
+            }
+            return categories;
+        }
         public GetProductModel ItemDescription(int id)
         {
             GetProductModel products = null;
@@ -459,14 +590,22 @@ namespace vendoo.Packages
                                 Product_name = reader["product_name"] != DBNull.Value ? reader["product_name"].ToString() : string.Empty,
                                 Id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : 0,
                                 Category_id = reader["category_id"] != DBNull.Value ? Convert.ToInt32(reader["category_id"]) : 0,
-                                Full_Description = reader["full_description"] != DBNull.Value ? reader["full_description"].ToString() : string.Empty,
                                 Price = reader["price"] != DBNull.Value ? Convert.ToInt32(reader["price"]) : 0,
                                 Contact = reader["contact"] != DBNull.Value ? Convert.ToInt32(reader["contact"]) : 0,
                                 Image_path = reader["image_path"] != DBNull.Value ? JsonConvert.DeserializeObject<List<string>>(reader["image_path"].ToString()) : new List<string>(),
                                 Vaucher = reader["vaucher"] != DBNull.Value ? Convert.ToInt32(reader["vaucher"]) : 0,
                                 Sale = reader["sale"] != DBNull.Value ? Convert.ToInt32(reader["sale"]) : 0,
                                 Current_price = reader["current_price"] != DBNull.Value ? Convert.ToInt32(reader["current_price"]) : 0,
-                                Title = reader["title"] != DBNull.Value ? reader["title"].ToString() : string.Empty
+                                Title = reader["title"] != DBNull.Value ? reader["title"].ToString() : string.Empty,
+                                Description = reader["description"] != DBNull.Value ? reader["description"].ToString() : string.Empty,
+                                Offerin = reader["offerin"] != DBNull.Value ? reader["offerin"].ToString() : string.Empty,
+                                Pricein = reader["pricein"] != DBNull.Value ? reader["pricein"].ToString() : string.Empty,
+                                Menu = reader["menu"] != DBNull.Value ? reader["menu"].ToString() : string.Empty,
+                                Womenzone = reader["womenzone"] != DBNull.Value ? reader["womenzone"].ToString() : string.Empty,
+                                Menzone = reader["menzone"] != DBNull.Value ? reader["menzone"].ToString() : string.Empty,
+                                Clinicconcept = reader["clinicconcept"] != DBNull.Value ? reader["clinicconcept"].ToString() : string.Empty,
+                                Addinfo = reader["addinfo"] != DBNull.Value ? reader["addinfo"].ToString() : string.Empty,
+                                Athotel = reader["athotel"] != DBNull.Value ? reader["athotel"].ToString() : string.Empty
                             };
                         }
                     }
@@ -514,7 +653,7 @@ namespace vendoo.Packages
             return locations;
         }
 
-        public List<GuestNumberModel> getGuestNumber()
+        public List<GuestNumberModel> getGuestNumber(int category_id)
         {
             List<GuestNumberModel> locations = new List<GuestNumberModel>();
 
@@ -532,6 +671,8 @@ namespace vendoo.Packages
                         Direction = ParameterDirection.Output
                     };
                     command.Parameters.Add(cursorParameter);
+                    command.Parameters.Add("p_category_id", OracleDbType.Int32).Value = category_id;
+
 
                     using (var reader = command.ExecuteReader())
                     {
@@ -540,7 +681,7 @@ namespace vendoo.Packages
                             var location = new GuestNumberModel
                             {
                                 Id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : 0,
-                                GuestNumber = reader["guest_number"] != DBNull.Value ? Convert.ToInt32(reader["guest_number"]) : 0,
+                                GuestNumber = reader["guest_number"] != DBNull.Value ? reader["guest_number"].ToString() : string.Empty,
                             };
                             locations.Add(location);
                         }
@@ -623,6 +764,38 @@ namespace vendoo.Packages
             }
         }
 
+        public async Task<bool>UpdateBasket(CartModel model)
+        {
+            using (var connection = GetConnection())
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (var command = new OracleCommand("pkg_categories_operations.proc_update_basket", connection))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+
+                        command.Parameters.Add("p_user_id", OracleDbType.Int32).Value = model.User_id;
+                        command.Parameters.Add("p_product_id", OracleDbType.Int32).Value = model.Product_id;
+                        command.Parameters.Add("p_quantity", OracleDbType.Int32).Value = model.Quantity;
+
+                        await command.ExecuteNonQueryAsync();
+                        return true;
+                    }
+                }
+                catch (OracleException ex)
+                {
+                    Console.WriteLine($"Oracle error: {ex.Message}");
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"General error: {ex.Message}");
+                    return false;
+                }
+            }
+        }
+
         public List<GetBasketModel> GetBasket(int id)
         {
             List<GetBasketModel> basket = new List<GetBasketModel>();
@@ -649,6 +822,7 @@ namespace vendoo.Packages
                             var bask= new GetBasketModel
                             {
                                 Id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : 0,
+                                Product_id = reader["product_id"] != DBNull.Value ? Convert.ToInt32(reader["product_id"]) : 0,
                                 Image_path = reader["image_path"] != DBNull.Value ? JsonConvert.DeserializeObject<List<string>>(reader["image_path"].ToString()) : new List<string>(),
                                 Title = reader["title"] != DBNull.Value ? reader["title"].ToString() : string.Empty,
                                 Product_name = reader["product_name"] != DBNull.Value ? reader["product_name"].ToString() : string.Empty,
@@ -665,6 +839,36 @@ namespace vendoo.Packages
                 }
             }
             return basket;
+        }
+        public async Task<bool> DeleteFromBasket(int user_id,int product_id)
+        {
+            using (var connection = GetConnection())
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (var command = new OracleCommand("pkg_categories_operations.proc_delete_from_cart", connection))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+
+                        command.Parameters.Add("p_user_id", OracleDbType.Int32).Value = user_id;
+                        command.Parameters.Add("p_product_id", OracleDbType.Int32).Value = product_id;
+
+                        await command.ExecuteNonQueryAsync();
+                        return true;
+                    }
+                }
+                catch (OracleException ex)
+                {
+                    Console.WriteLine($"Oracle error: {ex.Message}");
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"General error: {ex.Message}");
+                    return false;
+                }
+            }
         }
     }
     }

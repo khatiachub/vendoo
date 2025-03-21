@@ -3,6 +3,6 @@
     public class GuestNumberModel
     {
         public int Id { get; set; }
-        public int GuestNumber { get; set; }
+        public string GuestNumber { get; set; }
     }
 }
